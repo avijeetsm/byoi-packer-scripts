@@ -1,4 +1,4 @@
-// BYOI-compatible conversion of virtual-environments ubuntu-24.04.pkr.hcl.
+// BYOI-compatible conversion of virtual-environments Ubuntu templates.
 // BYOI supplies the googlecompute source/build block and installs Docker via dockerVersion.
 // This file intentionally contains only variables and provisioners.
 
@@ -14,7 +14,7 @@ variable "image_folder" {
 
 variable "image_os" {
   type    = string
-  default = "ubuntu24"
+  default = (env("PLUGIN_BASE_IMAGE") == "ubuntu/22.04" || env("PLUGIN_BASEIMAGE") == "ubuntu/22.04") ? "ubuntu22" : "ubuntu24"
 }
 
 variable "image_version" {
@@ -30,6 +30,16 @@ variable "imagedata_file" {
 variable "installer_script_folder" {
   type    = string
   default = "/imagegeneration/installers"
+}
+
+variable "toolset_file" {
+  type    = string
+  default = (env("PLUGIN_BASE_IMAGE") == "ubuntu/22.04" || env("PLUGIN_BASEIMAGE") == "ubuntu/22.04") ? "toolset-2204.json" : "toolset-2404.json"
+}
+
+variable "readme_file" {
+  type    = string
+  default = (env("PLUGIN_BASE_IMAGE") == "ubuntu/22.04" || env("PLUGIN_BASEIMAGE") == "ubuntu/22.04") ? "Ubuntu2204-Readme.md" : "Ubuntu2404-Readme.md"
 }
 
 provisioner "shell" {
@@ -83,7 +93,7 @@ provisioner "file" {
 
 provisioner "file" {
   destination = "${var.installer_script_folder}/toolset.json"
-  source      = "${path.root}/../toolsets/toolset-2404.json"
+  source      = "${path.root}/../toolsets/${var.toolset_file}"
 }
 
 provisioner "shell" {
@@ -178,7 +188,8 @@ provisioner "shell" {
     "${path.root}/../scripts/build/install-python.sh",
     "${path.root}/../scripts/build/install-zstd.sh",
     "${path.root}/../scripts/build/install-ninja.sh",
-    "${path.root}/../scripts/build/install-envman.sh"
+    "${path.root}/../scripts/build/install-envman.sh",
+    "${path.root}/../scripts/build/install-tailscale.sh"
   ]
 }
 
@@ -225,7 +236,7 @@ provisioner "shell" {
 }
 
 provisioner "file" {
-  destination = "${path.root}/../Ubuntu2404-Readme.md"
+  destination = "${path.root}/../${var.readme_file}"
   direction   = "download"
   source      = "${var.image_folder}/software-report.md"
 }
