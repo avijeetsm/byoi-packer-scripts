@@ -5,12 +5,13 @@
 ################################################################################
 
 os_label=$(lsb_release -rs)
+export DEBIAN_FRONTEND=noninteractive
 
 # Install Microsoft repository
 wget https://packages.microsoft.com/config/ubuntu/$os_label/packages-microsoft-prod.deb
 dpkg -i packages-microsoft-prod.deb
 
 # update
-apt-get install apt-transport-https ca-certificates curl software-properties-common
+apt-get install -y apt-transport-https ca-certificates curl software-properties-common
 apt-get update
-apt-get dist-upgrade
+apt-get dist-upgrade -y
