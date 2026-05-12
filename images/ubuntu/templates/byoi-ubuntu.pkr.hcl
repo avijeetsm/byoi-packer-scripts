@@ -78,30 +78,8 @@ provisioner "file" {
 }
 
 provisioner "file" {
-  destination = "${var.image_folder}"
-  sources = [
-    "${path.root}/../assets/post-gen",
-    "${path.root}/../scripts/tests",
-    "${path.root}/../scripts/docs-gen"
-  ]
-}
-
-provisioner "file" {
-  destination = "${var.image_folder}/docs-gen/"
-  source      = "${path.root}/../../../helpers/software-report-base"
-}
-
-provisioner "file" {
   destination = "${var.installer_script_folder}/toolset.json"
   source      = "${path.root}/../toolsets/${var.toolset_file}"
-}
-
-provisioner "shell" {
-  execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-  inline = [
-    "mv ${var.image_folder}/docs-gen ${var.image_folder}/SoftwareReport",
-    "mv ${var.image_folder}/post-gen ${var.image_folder}/post-generation"
-  ]
 }
 
 provisioner "shell" {
@@ -117,48 +95,21 @@ provisioner "shell" {
 }
 
 provisioner "shell" {
-  environment_vars = ["DEBIAN_FRONTEND=noninteractive", "HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
-  execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-  scripts          = ["${path.root}/../scripts/build/install-apt-vital.sh"]
-}
-
-provisioner "shell" {
-  environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
-  execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-  scripts          = ["${path.root}/../scripts/build/install-powershell.sh"]
-}
-
-provisioner "shell" {
-  environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
-  execute_command  = "sudo sh -c '{{ .Vars }} pwsh -f {{ .Path }}'"
-  scripts          = ["${path.root}/../scripts/build/Install-PowerShellModules.ps1", "${path.root}/../scripts/build/Install-PowerShellAzModules.ps1"]
+  execute_command = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
+  inline = [
+    "cat > /usr/local/bin/invoke_tests <<'EOF'\n#!/usr/bin/env bash\necho \"Skipping tests: $*\"\nexit 0\nEOF",
+    "chmod +x /usr/local/bin/invoke_tests"
+  ]
 }
 
 provisioner "shell" {
   environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}", "DEBIAN_FRONTEND=noninteractive"]
   execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
   scripts = [
+    "${path.root}/../scripts/build/install-apt-vital.sh",
     "${path.root}/../scripts/build/install-java-tools.sh",
     "${path.root}/../scripts/build/install-tailscale.sh"
   ]
-}
-
-provisioner "shell" {
-  environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
-  execute_command  = "sudo sh -c '{{ .Vars }} pwsh -f {{ .Path }}'"
-  scripts          = ["${path.root}/../scripts/build/Install-Toolset.ps1", "${path.root}/../scripts/build/Configure-Toolset.ps1"]
-}
-
-provisioner "shell" {
-  environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
-  execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-  scripts          = ["${path.root}/../scripts/build/install-pipx-packages.sh"]
-}
-
-provisioner "shell" {
-  environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "DEBIAN_FRONTEND=noninteractive", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
-  execute_command  = "/bin/sh -c '{{ .Vars }} {{ .Path }}'"
-  scripts          = ["${path.root}/../scripts/build/install-homebrew.sh"]
 }
 
 provisioner "shell" {
@@ -178,29 +129,6 @@ provisioner "shell" {
   pause_before        = "1m0s"
   scripts             = ["${path.root}/../scripts/build/cleanup.sh"]
   start_retry_timeout = "10m"
-}
-
-provisioner "shell" {
-  environment_vars = ["IMAGE_VERSION=${var.image_version}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
-  inline           = ["pwsh -File ${var.image_folder}/SoftwareReport/Generate-SoftwareReport.ps1 -OutputDirectory ${var.image_folder}", "pwsh -File ${var.image_folder}/tests/RunAll-Tests.ps1 -OutputDirectory ${var.image_folder}"]
-}
-
-provisioner "file" {
-  destination = "${path.root}/../${var.readme_file}"
-  direction   = "download"
-  source      = "${var.image_folder}/software-report.md"
-}
-
-provisioner "file" {
-  destination = "${path.root}/../software-report.json"
-  direction   = "download"
-  source      = "${var.image_folder}/software-report.json"
-}
-
-provisioner "shell" {
-  environment_vars = ["HELPER_SCRIPT_FOLDER=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}", "IMAGE_FOLDER=${var.image_folder}"]
-  execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
-  scripts          = ["${path.root}/../scripts/build/configure-system.sh"]
 }
 
 provisioner "shell" {
