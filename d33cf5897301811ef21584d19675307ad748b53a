@@ -1,0 +1,13 @@
+---
+{
+  "attestations": [],
+  "base_commit_sha": "initial",
+  "branch": "main",
+  "commit_sha": "d33cf5897301811ef21584d19675307ad748b53a",
+  "commit_time": "2026-05-12T14:52:50+05:30",
+  "commit_type": "direct_commit",
+  "git_ai_version": "1.4.4",
+  "prompts": {},
+  "repo": "https://github.com/avijeetsm/byoi-packer-scripts.git",
+  "schema_version": "authorship/3.0.0"
+}
