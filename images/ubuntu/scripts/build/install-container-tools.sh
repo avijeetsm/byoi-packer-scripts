@@ -30,4 +30,16 @@ apt-get install ${install_packages[@]}
 mkdir -p /etc/containers
 printf "[registries.search]\nregistries = ['docker.io', 'quay.io']\n" | tee /etc/containers/registries.conf
 
+# Configure subuid/subgid for all users to enable rootless podman networking.
+# The install-time test runs as root (via sudo), but the final RunAll-Tests.ps1
+# runs as the non-root packer SSH user which also needs these mappings.
+subid_offset=100000
+for user_entry in root $(awk -F: '$3 >= 1000 {print $1}' /etc/passwd); do
+    if ! grep -q "^${user_entry}:" /etc/subuid 2>/dev/null; then
+        echo "${user_entry}:${subid_offset}:65536" >> /etc/subuid
+        echo "${user_entry}:${subid_offset}:65536" >> /etc/subgid
+        subid_offset=$((subid_offset + 65536))
+    fi
+done
+
 invoke_tests "Tools" "Containers"
