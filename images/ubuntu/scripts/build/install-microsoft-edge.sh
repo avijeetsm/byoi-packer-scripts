@@ -17,10 +17,10 @@ wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > $G
 echo "deb [arch=amd64 signed-by=$GPG_KEY] $REPO_URL stable main" > $REPO_PATH
 
 apt-get update
-apt-get install --no-install-recommends microsoft-edge-stable
+apt-get install -y --no-install-recommends microsoft-edge-stable
 
-rm $GPG_KEY
-rm $REPO_PATH
+rm -f $GPG_KEY
+rm -f $REPO_PATH /etc/apt/sources.list.d/microsoft-edge*.list
 
 echo "microsoft-edge $REPO_URL" >> $HELPER_SCRIPTS/apt-sources.txt
 

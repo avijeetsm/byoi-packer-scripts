@@ -1,5 +1,5 @@
 // BYOI-compatible conversion of virtual-environments Ubuntu templates.
-// BYOI supplies the googlecompute source/build block and installs Docker via dockerVersion.
+// BYOI supplies the googlecompute source/build block.
 // This file intentionally contains only variables and provisioners.
 
 variable "helper_script_folder" {
@@ -30,6 +30,16 @@ variable "imagedata_file" {
 variable "installer_script_folder" {
   type    = string
   default = "/imagegeneration/installers"
+}
+
+variable "dockerhub_login" {
+  type    = string
+  default = "${env("DOCKERHUB_LOGIN")}"
+}
+
+variable "dockerhub_password" {
+  type    = string
+  default = "${env("DOCKERHUB_PASSWORD")}"
 }
 
 variable "toolset_file" {
@@ -132,6 +142,12 @@ provisioner "shell" {
   environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}"]
   execute_command  = "sudo sh -c '{{ .Vars }} pwsh -f {{ .Path }}'"
   scripts          = ["${path.root}/../scripts/build/Install-PowerShellModules.ps1", "${path.root}/../scripts/build/Install-PowerShellAzModules.ps1"]
+}
+
+provisioner "shell" {
+  environment_vars = ["HELPER_SCRIPTS=${var.helper_script_folder}", "INSTALLER_SCRIPT_FOLDER=${var.installer_script_folder}", "DOCKERHUB_LOGIN=${var.dockerhub_login}", "DOCKERHUB_PASSWORD=${var.dockerhub_password}"]
+  execute_command  = "sudo sh -c '{{ .Vars }} {{ .Path }}'"
+  scripts          = ["${path.root}/../scripts/build/install-docker-compose.sh", "${path.root}/../scripts/build/install-docker-moby.sh"]
 }
 
 provisioner "shell" {
