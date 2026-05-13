@@ -33,8 +33,14 @@ printf "[registries.search]\nregistries = ['docker.io', 'quay.io']\n" | tee /etc
 # Configure subuid/subgid for all users to enable rootless podman networking.
 # The install-time test runs as root (via sudo), but the final RunAll-Tests.ps1
 # runs as the non-root packer SSH user which also needs these mappings.
+# On GCE with OS Login, the SSH user (e.g. sa_*) lives in NSS, not /etc/passwd,
+# so we also check SUDO_USER and getent to catch it.
 subid_offset=100000
-for user_entry in root $(awk -F: '$3 >= 1000 {print $1}' /etc/passwd); do
+all_users="root $(awk -F: '$3 >= 1000 {print $1}' /etc/passwd)"
+if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != "root" ]; then
+    all_users="$all_users $SUDO_USER"
+fi
+for user_entry in $all_users; do
     if ! grep -q "^${user_entry}:" /etc/subuid 2>/dev/null; then
         echo "${user_entry}:${subid_offset}:65536" >> /etc/subuid
         echo "${user_entry}:${subid_offset}:65536" >> /etc/subgid
